@@ -140,42 +140,17 @@ This is the agent that will be TESTED by the green agent.
 Press Ctrl+C to stop the server.
 """)
 
-    # Following AgentBeats pattern: controller sets AGENT_URL environment variable
-    # The controller reads CLOUDRUN_HOST/RAILWAY_PUBLIC_DOMAIN to know its public URL, then sets AGENT_URL for the agent
-    # However, if AGENT_URL points to wrong domain (finance-green instead of finance-white),
-    # we use RAILWAY_PUBLIC_DOMAIN as the source of truth for white agent
-    # # without controller (for local development):
-    # url = f"http://{host}:{port}"
-    
+    # Following tau-bench: controller sets AGENT_URL environment variable
     agent_url = os.environ.get("AGENT_URL")
-    railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
-    
-    # For white agent, prioritize RAILWAY_PUBLIC_DOMAIN if it contains "finance-white"
-    # This ensures we use the correct domain even if AGENT_URL is wrong
-    if railway_domain and "finance-white" in railway_domain:
-        # Extract the instance ID from AGENT_URL if present, otherwise use base path
-        if agent_url and "/to_agent/" in agent_url:
-            # Extract instance ID from AGENT_URL (e.g., /to_agent/b02e7f0241964cecafb8e1d1d4e6d537)
-            instance_path = agent_url.split("/to_agent/")[-1]
-            url = f"https://{railway_domain}/to_agent/{instance_path}"
-        else:
-            url = f"https://{railway_domain}/to_agent/"
-        if agent_url and "finance-green" in agent_url:
-            print(f"WARNING: AGENT_URL points to green agent ({agent_url}), using RAILWAY_PUBLIC_DOMAIN instead: {url}")
-        else:
-            print(f"Using RAILWAY_PUBLIC_DOMAIN: {url}")
-    elif agent_url:
+    if agent_url:
         url = agent_url
-        print(f"Using AGENT_URL from controller: {agent_url}")
+        print(f"Using AGENT_URL from controller: {url}")
     else:
-        # Fallback: construct from host/port (for local development without controller)
+        # Fallback for local development without controller
         url = f"http://{host}:{port}"
-        print(f"WARNING: AGENT_URL not set, using fallback: {url}")
-        print(f"  This should be set by the controller when running with agentbeats run_ctrl")
+        print(f"AGENT_URL not set, using fallback: {url}")
     
     card = prepare_white_agent_card(url)
-    
-    print(f"URL: {url}")
 
     request_handler = DefaultRequestHandler(
         agent_executor=FinanceWhiteAgentExecutor(
