@@ -1,0 +1,2 @@
+web: AGENTBEATS_LAUNCH_SCRIPT=run_white.sh agentbeats run_ctrl
+
